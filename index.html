@@ -67,10 +67,11 @@ h1{font-size:clamp(1.55rem,5vw,2.3rem);margin:0 0 5px}
 .legend{margin:0 0 14px;padding:12px 14px;border-radius:18px;color:var(--muted);font-size:.87rem}
 .day-card{border-radius:24px;overflow:hidden}
 .day-title{padding:16px 18px;font-size:1.15rem;font-weight:850;border-bottom:1px solid rgba(255,255,255,.1)}
-.lesson{display:grid;grid-template-columns:48px 1fr auto;gap:12px;align-items:center;padding:15px 18px;border-bottom:1px solid rgba(255,255,255,.07)}
+.lesson{display:grid;grid-template-columns:48px 1fr 65px auto;gap:12px;align-items:center;padding:15px 18px;border-bottom:1px solid rgba(255,255,255,.07)}
 .lesson:last-child{border-bottom:0}
 .num{color:var(--muted);font-size:.82rem}
 .subject{font-weight:750;font-size:1rem}
+.room{font-size:.85rem;color:var(--accent);font-weight:700;background:rgba(122,167,255,.12);padding:4px 8px;border-radius:8px;text-align:center}
 .time{color:var(--muted);font-size:.82rem;text-align:right}
 .lesson.current{background:linear-gradient(90deg,rgba(122,167,255,.25),rgba(122,167,255,.06));box-shadow:inset 3px 0 0 var(--accent)}
 .lesson.next{background:rgba(255,255,255,.055)}
@@ -80,8 +81,9 @@ h1{font-size:clamp(1.55rem,5vw,2.3rem);margin:0 0 5px}
   .top{border-radius:20px}
   .now{padding:12px}
   .day-card{border-radius:19px}
-  .lesson{grid-template-columns:38px 1fr;padding:13px 14px}
-  .time{grid-column:2;text-align:left;margin-top:-8px}
+  .lesson{grid-template-columns:38px 1fr auto;padding:13px 14px}
+  .room{grid-column:3;font-size:.78rem;padding:3px 6px}
+  .time{grid-column:2 / span 2;text-align:left;margin-top:-4px}
   .day-button{min-width:105px}
 }
 </style>
@@ -147,11 +149,49 @@ const names={
 const fullName=s=>names[s]||s;
 
 const schedule={
-  1:{name:"Poniedziałek",lessons:{2:"mat",3:"chem",4:"j.pol",5:"mat",6:"biz",7:"j.ang_R",8:"sam"}},
-  2:{name:"Wtorek",lessons:{1:"j.ang",2:"j.hisz",3:"bio",4:"wf",5:"geo"}},
-  3:{name:"Środa",lessons:{2:"fiz",3:"mat",4:"j.hisz",5:"edb",6:"j.pol"}},
-  4:{name:"Czwartek",lessons:{1:"j.ang",2:"z.wych",3:"mat",4:"j.pol",5:"fiz",6:"wf",7:"inf",8:"hist"}},
-  5:{name:"Piątek",lessons:{1:"muz",2:"hist",3:"j.pol",4:"z.k.kr.",5:"j.ang",6:"j.ang_R",7:"wf"}}
+  1:{name:"Poniedziałek",lessons:{
+    2:{sub:"mat",room:"G39"},
+    3:{sub:"chem",room:"G47"},
+    4:{sub:"j.pol",room:"G4"},
+    5:{sub:"mat",room:"G39"},
+    6:{sub:"biz",room:"G40"},
+    7:{sub:"j.ang_R",room:"G2"},
+    8:{sub:"sam",room:"HS1"},
+    9:{sub:"sam",room:"HS1"}
+  }},
+  2:{name:"Wtorek",lessons:{
+    1:{sub:"j.ang",room:"G30"},
+    2:{sub:"j.hisz",room:"H33"},
+    3:{sub:"bio",room:"G40"},
+    4:{sub:"wf",room:"HS3"},
+    5:{sub:"geo",room:"G41"}
+  }},
+  3:{name:"Środa",lessons:{
+    2:{sub:"fiz",room:"G38"},
+    3:{sub:"mat",room:"G39"},
+    4:{sub:"j.hisz",room:"G45"},
+    5:{sub:"edb",room:"G3"},
+    6:{sub:"j.pol",room:"G4"}
+  }},
+  4:{name:"Czwartek",lessons:{
+    1:{sub:"j.ang",room:"G29"},
+    2:{sub:"z.wych",room:"G39"},
+    3:{sub:"mat",room:"G39"},
+    4:{sub:"j.pol",room:"G4"},
+    5:{sub:"fiz",room:"G36"},
+    6:{sub:"wf",room:"HS5"},
+    7:{sub:"inf",room:"H34"},
+    8:{sub:"hist",room:"G1"}
+  }},
+  5:{name:"Piątek",lessons:{
+    1:{sub:"muz",room:"P6_muz"},
+    2:{sub:"hist",room:"G1"},
+    3:{sub:"j.pol",room:"G4"},
+    4:{sub:"z.k.kr.",room:"G4"},
+    5:{sub:"j.ang",room:"G45"},
+    6:{sub:"j.ang_R",room:"G45"},
+    7:{sub:"wf",room:"HS3"}
+  }}
 };
 
 let selectedDate=new Date();
@@ -168,7 +208,10 @@ function getLessons(date){
   const day=date.getDay();
   const base={...(schedule[day]?.lessons||{})};
   if(day===3 && isZkWeek(date)){
-    base[7]="ZK LO";base[8]="ZK LO";base[9]="ZK LO";base[10]="ZK LO";
+    base[7]={sub:"ZK LO",room:"H34"};
+    base[8]={sub:"ZK LO",room:"H34"};
+    base[9]={sub:"ZK LO",room:"H34"};
+    base[10]={sub:"ZK LO",room:"H34"};
   }
   return base;
 }
@@ -191,13 +234,13 @@ function getStatus(date){
       const next=entries.find(x=>x>p);
       return {
         type:"current",p,
-        text:`Teraz: ${fullName(lessons[p])} • ${periods[p-1][0]}–${periods[p-1][1]}`,
-        next:next?`Następna: ${fullName(lessons[next])} • ${periods[next-1][0]}–${periods[next-1][1]}`:"To ostatnia lekcja"
+        text:`Teraz: ${fullName(lessons[p].sub)} [${lessons[p].room}] • ${periods[p-1][0]}–${periods[p-1][1]}`,
+        next:next?`Następna: ${fullName(lessons[next].sub)} [${lessons[next].room}] • ${periods[next-1][0]}–${periods[next-1][1]}`:"To ostatnia lekcja"
       };
     }
   }
   const next=entries.find(p=>current<mins(periods[p-1][0]));
-  if(next) return {type:"before",next,text:`Następna: ${fullName(lessons[next])} • ${periods[next-1][0]}–${periods[next-1][1]}`};
+  if(next) return {type:"before",next,text:`Następna: ${fullName(lessons[next].sub)} [${lessons[next].room}] • ${periods[next-1][0]}–${periods[next-1][1]}`};
   return {type:"off",text:"Lekcje na dziś już się skończyły"};
 }
 
@@ -236,9 +279,11 @@ function renderSchedule(){
     let cls="lesson";
     if(isToday && status?.type==="current" && status.p===p) cls+=" current";
     if(isToday && status?.type==="before" && status.next===p) cls+=" next";
+    const item=lessons[p];
     html+=`<div class="${cls}">
       <div class="num">${p}. lekcja</div>
-      <div class="subject">${fullName(lessons[p])}</div>
+      <div class="subject">${fullName(item.sub)}</div>
+      <div class="room">${item.room}</div>
       <div class="time">${periods[p-1][0]}–${periods[p-1][1]}</div>
     </div>`;
   }
