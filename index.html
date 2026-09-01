@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0f19">
+<title>Plan lekcji — 1LA</title>
+<style>
+:root{
+  --bg1:#080b12;--bg2:#151b2a;--text:#f5f7ff;--muted:#aeb8ce;
+  --border:rgba(255,255,255,.18);--accent:#7aa7ff;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;min-height:100vh;color:var(--text);
+  font-family:ui-rounded,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:
+    radial-gradient(circle at 15% 0%,rgba(76,115,255,.22),transparent 32rem),
+    radial-gradient(circle at 90% 30%,rgba(148,85,255,.14),transparent 28rem),
+    linear-gradient(145deg,var(--bg1),var(--bg2));
+  padding:calc(12px + env(safe-area-inset-top)) 12px 32px;
+}
+.glass{
+  background:linear-gradient(135deg,rgba(255,255,255,.16),rgba(255,255,255,.07));
+  border:1px solid var(--border);
+  box-shadow:0 12px 35px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.12);
+  backdrop-filter:blur(22px) saturate(150%);
+  -webkit-backdrop-filter:blur(22px) saturate(150%);
+}
+.top{
+  position:sticky;top:calc(8px + env(safe-area-inset-top));z-index:20;
+  max-width:1180px;margin:0 auto 12px;border-radius:24px;overflow:hidden;
+}
+.now{display:flex;gap:12px;align-items:center;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.1)}
+.status-dot{width:10px;height:10px;border-radius:50%;background:#6cff9b;box-shadow:0 0 18px currentColor;flex:none}
+.now-main{min-width:0;flex:1}
+.now-title{font-size:.76rem;color:var(--muted);margin-bottom:2px}
+.now-value{font-size:clamp(.92rem,3vw,1.1rem);font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.clock{color:var(--muted);font-variant-numeric:tabular-nums;font-size:.9rem}
+.tabs{display:flex;gap:8px;padding:10px;overflow:auto}
+.tab,.day-button{
+  border:1px solid transparent;background:transparent;color:var(--muted);
+  font:inherit;font-weight:750;cursor:pointer;white-space:nowrap;
+}
+.tab{padding:10px 18px;border-radius:16px}
+.tab.active{background:rgba(255,255,255,.17);border-color:rgba(255,255,255,.18);color:#fff}
+main{max-width:1180px;margin:auto}
+.days-nav{
+  display:flex;gap:9px;overflow-x:auto;padding:3px 2px 13px;
+  scrollbar-width:none;
+}
+.days-nav::-webkit-scrollbar{display:none}
+.day-button{
+  min-width:112px;padding:10px 13px;border-radius:18px;
+  background:rgba(255,255,255,.055);border-color:rgba(255,255,255,.1);
+  text-align:left;flex:none;
+}
+.day-button .day-name{display:block;font-size:.88rem;color:#fff}
+.day-button .date{display:block;font-size:.76rem;color:var(--muted);margin-top:3px}
+.day-button.active{
+  background:linear-gradient(135deg,rgba(122,167,255,.35),rgba(255,255,255,.12));
+  border-color:rgba(160,190,255,.5);
+}
+header{padding:3px 4px 16px}
+h1{font-size:clamp(1.55rem,5vw,2.3rem);margin:0 0 5px}
+.subtitle{color:var(--muted);font-size:.92rem}
+.legend{margin:0 0 14px;padding:12px 14px;border-radius:18px;color:var(--muted);font-size:.87rem}
+.day-card{border-radius:24px;overflow:hidden}
+.day-title{padding:16px 18px;font-size:1.15rem;font-weight:850;border-bottom:1px solid rgba(255,255,255,.1)}
+.lesson{display:grid;grid-template-columns:48px 1fr auto;gap:12px;align-items:center;padding:15px 18px;border-bottom:1px solid rgba(255,255,255,.07)}
+.lesson:last-child{border-bottom:0}
+.num{color:var(--muted);font-size:.82rem}
+.subject{font-weight:750;font-size:1rem}
+.time{color:var(--muted);font-size:.82rem;text-align:right}
+.lesson.current{background:linear-gradient(90deg,rgba(122,167,255,.25),rgba(122,167,255,.06));box-shadow:inset 3px 0 0 var(--accent)}
+.lesson.next{background:rgba(255,255,255,.055)}
+.empty{padding:24px 18px;color:var(--muted)}
+@media(max-width:560px){
+  body{padding-left:8px;padding-right:8px}
+  .top{border-radius:20px}
+  .now{padding:12px}
+  .day-card{border-radius:19px}
+  .lesson{grid-template-columns:38px 1fr;padding:13px 14px}
+  .time{grid-column:2;text-align:left;margin-top:-8px}
+  .day-button{min-width:105px}
+}
+</style>
+</head>
+<body>
+
+<section class="top glass">
+  <div class="now">
+    <div class="status-dot" id="dot"></div>
+    <div class="now-main">
+      <div class="now-title" id="nowTitle">PLAN 1LA</div>
+      <div class="now-value" id="nowValue">Ładowanie…</div>
+    </div>
+    <div class="clock" id="clock"></div>
+  </div>
+  <nav class="tabs">
+    <button class="tab active">1LA</button>
+  </nav>
+</section>
+
+<main>
+  <div class="days-nav" id="daysNav"></div>
+
+  <header>
+    <h1 id="pageTitle">Plan lekcji <span style="color:var(--accent)">1LA</span></h1>
+    <div class="subtitle" id="pageSubtitle"></div>
+  </header>
+
+  <div class="legend glass">
+    <strong>ZK LO:</strong> co 2 tygodnie, zaczynając od <strong>09.09.2026</strong>.
+  </div>
+
+  <section class="day-card glass" id="scheduleCard"></section>
+</main>
+
+<script>
+const periods=[
+ ["07:40","08:25"],["08:35","09:20"],["09:30","10:15"],["10:30","11:15"],
+ ["11:25","12:10"],["12:25","13:10"],["13:20","14:05"],["14:10","14:55"],
+ ["15:00","15:45"],["15:55","16:40"],["16:45","17:30"]
+];
+
+const names={
+ "mat":"Matematyka",
+ "j.pol":"Język Polski",
+ "biz":"Biznes i zarządzanie",
+ "j.ang_R":"Język Angielski ROZSZERZONY",
+ "sam":"Samoobrona",
+ "j.ang":"Język Angielski",
+ "j.hisz":"Język Hiszpański",
+ "bio":"Biologia",
+ "wf":"WF",
+ "geo":"Geografia",
+ "fiz":"Fizyka",
+ "edb":"Edukacja Dla Bezpieczeństwa",
+ "z.wych":"Zajęcia z wychowawcą",
+ "inf":"Informatyka",
+ "hist":"Historia",
+ "muz":"Muzyka",
+ "z.k.kr.":"z.k.kr.",
+ "chem":"Chemia"
+};
+const fullName=s=>names[s]||s;
+
+const schedule={
+  1:{name:"Poniedziałek",lessons:{2:"mat",3:"chem",4:"j.pol",5:"mat",6:"biz",7:"j.ang_R",8:"sam"}},
+  2:{name:"Wtorek",lessons:{1:"j.ang",2:"j.hisz",3:"bio",4:"wf",5:"geo"}},
+  3:{name:"Środa",lessons:{2:"fiz",3:"mat",4:"j.hisz",5:"edb",6:"j.pol"}},
+  4:{name:"Czwartek",lessons:{1:"j.ang",2:"z.wych",3:"mat",4:"j.pol",5:"fiz",6:"wf",7:"inf",8:"hist"}},
+  5:{name:"Piątek",lessons:{1:"muz",2:"hist",3:"j.pol",4:"z.k.kr.",5:"j.ang",6:"j.ang_R",7:"wf"}}
+};
+
+let selectedDate=new Date();
+
+function startOfDay(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate())}
+function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x}
+function dateKey(d){return startOfDay(d).getTime()}
+function isZkWeek(date){
+  const start=new Date(2026,8,9);
+  const diff=Math.floor((startOfDay(date)-startOfDay(start))/86400000);
+  return diff>=0 && Math.floor(diff/7)%2===0;
+}
+function getLessons(date){
+  const day=date.getDay();
+  const base={...(schedule[day]?.lessons||{})};
+  if(day===3 && isZkWeek(date)){
+    base[7]="ZK LO";base[8]="ZK LO";base[9]="ZK LO";base[10]="ZK LO";
+  }
+  return base;
+}
+function mins(s){const [h,m]=s.split(":").map(Number);return h*60+m}
+function nowMinutes(d){return d.getHours()*60+d.getMinutes()}
+function formatDate(d){
+  return d.toLocaleDateString("pl-PL",{day:"2-digit",month:"2-digit"});
+}
+function longDate(d){
+  return d.toLocaleDateString("pl-PL",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+}
+
+function getStatus(date){
+  const day=date.getDay();
+  if(!schedule[day]) return {type:"off",text:"Brak lekcji — weekend"};
+  const lessons=getLessons(date), current=nowMinutes(date);
+  const entries=Object.keys(lessons).map(Number).sort((a,b)=>a-b);
+  for(const p of entries){
+    if(current>=mins(periods[p-1][0]) && current<=mins(periods[p-1][1])){
+      const next=entries.find(x=>x>p);
+      return {
+        type:"current",p,
+        text:`Teraz: ${fullName(lessons[p])} • ${periods[p-1][0]}–${periods[p-1][1]}`,
+        next:next?`Następna: ${fullName(lessons[next])} • ${periods[next-1][0]}–${periods[next-1][1]}`:"To ostatnia lekcja"
+      };
+    }
+  }
+  const next=entries.find(p=>current<mins(periods[p-1][0]));
+  if(next) return {type:"before",next,text:`Następna: ${fullName(lessons[next])} • ${periods[next-1][0]}–${periods[next-1][1]}`};
+  return {type:"off",text:"Lekcje na dziś już się skończyły"};
+}
+
+function renderDaysNav(){
+  const nav=document.getElementById("daysNav");
+  nav.innerHTML="";
+  const today=startOfDay(new Date());
+  for(let i=0;i<14;i++){
+    const d=addDays(today,i);
+    const button=document.createElement("button");
+    button.className="day-button"+(dateKey(d)===dateKey(selectedDate)?" active":"");
+    const dayName=d.toLocaleDateString("pl-PL",{weekday:"long"});
+    button.innerHTML=`<span class="day-name">${dayName.charAt(0).toUpperCase()+dayName.slice(1)}</span><span class="date">${formatDate(d)}</span>`;
+    button.onclick=()=>{selectedDate=startOfDay(d);renderAll();};
+    nav.appendChild(button);
+  }
+}
+
+function renderSchedule(){
+  const card=document.getElementById("scheduleCard");
+  const day=selectedDate.getDay();
+  const lessons=getLessons(selectedDate);
+  const isToday=dateKey(selectedDate)===dateKey(new Date());
+  const status=isToday?getStatus(new Date()):null;
+
+  document.getElementById("pageSubtitle").textContent=longDate(selectedDate);
+
+  if(!schedule[day]){
+    card.innerHTML=`<div class="day-title">${longDate(selectedDate)}</div><div class="empty">Brak lekcji.</div>`;
+    return;
+  }
+
+  let html=`<div class="day-title">${schedule[day].name} <span style="color:var(--muted);font-size:.88rem;font-weight:600">• ${formatDate(selectedDate)}</span></div>`;
+  const entries=Object.keys(lessons).map(Number).sort((a,b)=>a-b);
+  for(const p of entries){
+    let cls="lesson";
+    if(isToday && status?.type==="current" && status.p===p) cls+=" current";
+    if(isToday && status?.type==="before" && status.next===p) cls+=" next";
+    html+=`<div class="${cls}">
+      <div class="num">${p}. lekcja</div>
+      <div class="subject">${fullName(lessons[p])}</div>
+      <div class="time">${periods[p-1][0]}–${periods[p-1][1]}</div>
+    </div>`;
+  }
+  card.innerHTML=html;
+}
+
+function updateTop(){
+  const now=new Date(),status=getStatus(now);
+  document.getElementById("clock").textContent=now.toLocaleTimeString("pl-PL",{hour:"2-digit",minute:"2-digit"});
+  const title=document.getElementById("nowTitle");
+  const value=document.getElementById("nowValue");
+  const dot=document.getElementById("dot");
+
+  if(status.type==="current"){
+    title.textContent=status.next;
+    value.textContent=status.text;
+    dot.style.background="#6cff9b";dot.style.color="#6cff9b";
+  }else{
+    title.textContent="PLAN 1LA";
+    value.textContent=status.text;
+    dot.style.background=status.type==="before"?"#ffd166":"#9ba4b5";
+    dot.style.color=status.type==="before"?"#ffd166":"#9ba4b5";
+  }
+}
+function renderAll(){
+  renderDaysNav();
+  renderSchedule();
+  updateTop();
+}
+renderAll();
+setInterval(()=>{updateTop();renderSchedule();},30000);
+</script>
+</body>
+</html>
